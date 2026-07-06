@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
+import { voidState } from '../lib/voidSignal'
 
 /**
  * Bioluminescent star-plankton: ~2600 particles rising slowly with
@@ -13,12 +14,15 @@ const HEIGHT = 60 // vertical wrap span
 
 const vertexShader = /* glsl */ `
   uniform float uTime;
+  uniform float uBurst;
   attribute float aSeed;
   attribute float aScale;
   varying float vSeed;
   varying float vTwinkle;
+  varying float vBurst;
 
   void main() {
+    vBurst = uBurst;
     vSeed = aSeed;
     vec3 pos = position;
 
@@ -35,7 +39,8 @@ const vertexShader = /* glsl */ `
     // bioluminescent twinkle
     vTwinkle = 0.55 + 0.45 * sin(uTime * (0.8 + aSeed * 2.4) + aSeed * 100.0);
 
-    gl_PointSize = aScale * vTwinkle * (150.0 / -mv.z);
+    // supernova flare — stars swell briefly on a Konami-code unlock
+    gl_PointSize = aScale * vTwinkle * (150.0 / -mv.z) * (1.0 + uBurst * 2.2);
     gl_Position = projectionMatrix * mv;
   }
 `
@@ -43,6 +48,7 @@ const vertexShader = /* glsl */ `
 const fragmentShader = /* glsl */ `
   varying float vSeed;
   varying float vTwinkle;
+  varying float vBurst;
 
   void main() {
     // soft round sprite with a hot core
@@ -55,8 +61,9 @@ const fragmentShader = /* glsl */ `
 
     vec3 col = mix(cyan, violet, smoothstep(0.25, 0.85, vSeed));
     if (vSeed > 0.9) col = teal; // rare deep-teal motes
+    col = mix(col, vec3(1.0), vBurst * 0.6); // flare white at the burst's peak
 
-    gl_FragColor = vec4(col, glow * vTwinkle * 0.85);
+    gl_FragColor = vec4(col, glow * vTwinkle * (0.85 + vBurst * 0.6));
   }
 `
 
@@ -82,7 +89,7 @@ export default function Plankton() {
     const material = new THREE.ShaderMaterial({
       vertexShader,
       fragmentShader,
-      uniforms: { uTime: { value: 0 } },
+      uniforms: { uTime: { value: 0 }, uBurst: { value: 0 } },
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
@@ -93,6 +100,11 @@ export default function Plankton() {
 
   useFrame((_, dt) => {
     material.uniforms.uTime.value += dt
+
+    // decay the flare over ~2.2s since the last Konami-code unlock
+    const age = (performance.now() - voidState.burstAt) / 1000
+    material.uniforms.uBurst.value =
+      voidState.burstAt && age < 2.2 ? 1 - age / 2.2 : 0
   })
 
   return <points geometry={geometry} material={material} frustumCulled={false} />

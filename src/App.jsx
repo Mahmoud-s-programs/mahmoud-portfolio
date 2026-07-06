@@ -12,6 +12,8 @@ import Projects from './components/Projects'
 import Testimonials from './components/Testimonials'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
+import VoidSignal from './components/VoidSignal'
+import AmbientToggle from './components/AmbientToggle'
 import useSmoothScroll from './hooks/useSmoothScroll'
 
 /**
@@ -46,6 +48,9 @@ export default function App() {
       <Cursor />
       <ProgressBar />
       <Nav />
+      <AmbientToggle started={booted} />
+      {/* hidden Konami-code (↑↑↓↓←→←→BA) easter egg — listens globally */}
+      <VoidSignal />
 
       {/* content */}
       <main className="relative z-10">
