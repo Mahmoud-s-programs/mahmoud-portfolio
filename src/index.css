@@ -1,0 +1,265 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============ BASE ============ */
+:root {
+  color-scheme: dark;
+}
+
+html {
+  /* Native smooth-scroll is disabled — src/lib/scrollControl.js drives an
+     inertial wheel-lerp for the buttery feel instead. */
+  scroll-behavior: auto;
+}
+
+html,
+body {
+  background: #060812;
+  overflow-x: hidden;
+}
+
+body {
+  @apply font-body font-light text-ink antialiased;
+  line-height: 1.6;
+}
+
+::selection {
+  background: #63f2ff;
+  color: #04121a;
+}
+
+:focus-visible {
+  outline: 2px solid #63f2ff;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* Hide the OS cursor on fine pointers — the custom neon dot/ring replaces it */
+@media (pointer: fine) {
+  body.custom-cursor,
+  body.custom-cursor a,
+  body.custom-cursor button {
+    cursor: none;
+  }
+}
+
+/* ============ FILM GRAIN OVERLAY ============ */
+.grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+/* ============ SHARED PIECES ============ */
+
+/* Glassmorphism: translucent fill + hairline border + inner glow */
+.glass {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.03);
+}
+
+/* Gradient headline treatment with a soft neon glow.
+   text-shadow (not filter: drop-shadow) — Chromium rasterizes drop-shadow
+   on background-clip:text elements as the full text BOX, producing a
+   visible rectangle; text-shadow follows the glyph outlines. */
+.glow-word {
+  background: linear-gradient(115deg, #63f2ff 10%, #a97bff 55%, #ff7ac3 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 22px rgba(122, 160, 255, 0.35);
+}
+
+/* Soft breathing halo behind the hero/contact gradient word.
+   NOTE: deliberately a separate element — animating `filter` directly on a
+   background-clip:text element makes Chromium rasterize the whole text box
+   as a visible rectangle. */
+.breath-glow {
+  position: absolute;
+  inset: -14% -10%;
+  border-radius: 999px;
+  background: radial-gradient(
+    50% 65% at 50% 55%,
+    rgba(122, 160, 255, 0.3),
+    transparent 70%
+  );
+  filter: blur(28px);
+  pointer-events: none;
+  animation: breathGlow 4.5s ease-in-out infinite;
+}
+@keyframes breathGlow {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Mono eyebrow label with leading gradient tick */
+.mono-label {
+  @apply font-mono uppercase text-dim;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.eyebrow::before {
+  content: '';
+  width: 44px;
+  height: 1px;
+  background: linear-gradient(90deg, #63f2ff, transparent);
+}
+
+.h-xl {
+  @apply font-display font-bold;
+  font-size: clamp(2.4rem, 6.4vw, 5.4rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+/* ============ 3D FLIP HELPERS (timeline cards) ============ */
+.perspective-1400 {
+  perspective: 1400px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* ============ PROJECT ART (procedural gradient "photography") ============ */
+.art {
+  position: absolute;
+  inset: -6%;
+}
+.art-1 {
+  background: conic-gradient(
+    from 210deg at 30% 40%,
+    #05233a,
+    #0b8aa8 25%,
+    #63f2ff 40%,
+    #112233,
+    #05233a
+  );
+}
+.art-2 {
+  background:
+    radial-gradient(90% 120% at 70% 20%, #a97bff 0%, #3b1d6e 40%, #0a0d1d 80%),
+    radial-gradient(40% 40% at 20% 80%, #ff7ac3 0%, transparent 70%);
+  background-blend-mode: screen;
+}
+.art-3 {
+  background:
+    linear-gradient(160deg, #ff7ac3 -20%, #7a1f52 30%, #12081d 70%),
+    radial-gradient(50% 60% at 80% 90%, rgba(99, 242, 255, 0.5), transparent 70%);
+  background-blend-mode: screen;
+}
+.art-4 {
+  background: conic-gradient(
+    from 0deg at 50% 120%,
+    #0a0d1d,
+    #134e5e 30%,
+    #63f2ff 50%,
+    #134e5e 70%,
+    #0a0d1d
+  );
+}
+/* Subtle CRT scanlines over every art panel */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0 3px,
+    rgba(0, 0, 0, 0.14) 3px 4px
+  );
+}
+
+/* ============ MICRO-INTERACTIONS ============ */
+
+/* Expanding ripple spawned at the click point (see useRipple hook) */
+.ripple {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.45),
+    rgba(255, 255, 255, 0) 60%
+  );
+  transform: translate(-50%, -50%);
+  animation: rippleGrow 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes rippleGrow {
+  from {
+    width: 0;
+    height: 0;
+    opacity: 0.9;
+  }
+  to {
+    width: 260px;
+    height: 260px;
+    opacity: 0;
+  }
+}
+
+/* Contact pill's live transmission dot */
+@keyframes pulseDot {
+  50% {
+    transform: scale(1.5);
+    opacity: 0.6;
+  }
+}
+.pulse-dot {
+  animation: pulseDot 2s infinite;
+}
+
+/* Hero scroll cue droplet */
+@keyframes cueDrop {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.cue-drop::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 3px;
+  height: 8px;
+  margin-left: -1.5px;
+  border-radius: 3px;
+  background: #63f2ff;
+  animation: cueDrop 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* ============ ACCESSIBILITY ============ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    transition-duration: 0.001s !important;
+  }
+}
